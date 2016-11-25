@@ -14,10 +14,17 @@ defmodule Scrape.Article do
   defstruct title: "", description: "", url: "", image: "", favicon: "",
     feeds: [], tags: [], fulltext: ""
 
-  def parse(website, html) do
+  @doc """
+    Possible options:
+      :selector -- CSS-style selector used to find content
+                   (defaults to "article, p, div, body")
+      :keep_markup -- whether to return HTML markup (true) or just text (false).
+                      (Default: false)
+  """
+  def parse(website, html, opts \\ []) do
     website
     |> website_to_article
-    |> fulltext_from_html(html)
+    |> fulltext_from_html(html, opts)
     |> extract_tags
   end
 
@@ -25,8 +32,8 @@ defmodule Scrape.Article do
     struct Article, Map.from_struct(website)
   end
 
-  defp fulltext_from_html(article, html) do
-    %{article | fulltext: Text.article_from_html(html)}
+  defp fulltext_from_html(article, html, selector \\ nil) do
+    %{article | fulltext: Text.article_from_html(html, selector)}
   end
 
   defp extract_tags(article) do

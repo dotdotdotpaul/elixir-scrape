@@ -22,10 +22,10 @@ defmodule Scrape do
     |> Website.parse(url)
   end
 
-  def article(url) do
+  def article(url, selector \\ nil) do
     html = Fetch.run url
     website = Website.parse(html, url)
-    Article.parse(website, html)
+    Article.parse(website, html, selector)
   end
 
 end

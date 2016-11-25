@@ -20,6 +20,35 @@ defmodule ArticleTest do
     assert length(data.tags) == 7
   end
 
+  test "parser doesn't retrieve content text from within markup by default" do
+    html = sample_article "bbc"
+    website = Scrape.Website.parse(html, "http://www.bbc.com/news/world-middle-east-34755443")
+    data = Scrape.Article.parse(website, html)
+
+    assert String.length(data.fulltext) > 0
+    refute String.contains?(data.fulltext, "Sinai Province militants")
+
+    # If we keep markup, it should be included...
+    data = Scrape.Article.parse(website, html, keep_markup: true)
+    assert String.length(data.fulltext) > 0
+    assert String.contains?(data.fulltext, "Sinai Province militants</h2>")
+  end
+
+  test "parser accepts optional selector" do
+    html = sample_article "bbc"
+    website = Scrape.Website.parse(html, "http://www.bbc.com/news/world-middle-east-34755443")
+
+    default_data = Scrape.Article.parse(website, html, keep_markup: true)
+    assert String.length(default_data.fulltext) > 0
+    assert String.contains?(default_data.fulltext, "Sinai Province militants</h2>")
+
+    # Change the selector.
+    data = Scrape.Article.parse(website, html, keep_markup: true, selector: "div.story-body__inner")
+    assert String.length(data.fulltext) > 0
+    refute data.fulltext == default_data.fulltext
+    assert String.contains?(data.fulltext, "Sinai Province militants</h2>")
+  end
+
   defp sample_article(name) do
     File.read! "test/sample_data/#{name}-article.html.eex"
   end

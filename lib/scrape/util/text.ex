@@ -13,18 +13,26 @@ defmodule Scrape.Util.Text do
     `String.split(text, "\n\n")`.
   """
 
-  @spec article_from_html(String.t) :: String.t
+  @spec article_from_html(String.t, String.t) :: String.t
 
-  def article_from_html(html) do
+  def article_from_html(html, opts \\ []) do
     html
     |> without_js
-    |> Floki.find("article, p, div, body")
-    |> Enum.map(fn x -> Floki.text(x, deep: false) end)
+    |> Floki.find(Keyword.get(opts, :selector) || "article, p, div, body")
+    |> Enum.map(fn x ->
+         extract_content(x, Keyword.get(opts, :keep_markup, false))
+       end)
     |> Enum.map(&normalize_whitespace/1)
     |> Enum.filter(&is_relevant?/1)
     |> Enum.join("\n\n")
   end
 
+  defp extract_content(block, false) do
+    Floki.text(block, deep: false)
+  end
+  defp extract_content(block, _) do
+    Floki.raw_html(block)
+  end
   @doc """
     A text paragraph shall not include any whitespace except single spaces
     between words.
