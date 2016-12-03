@@ -15,10 +15,11 @@ defmodule Scrape.Util.Text do
 
   @spec article_from_html(String.t, String.t) :: String.t
 
-  def article_from_html(html, opts \\ []) do
+  def article_from_html(html, opts \\ nil) do
+    opts = opts || []
     html
     |> without_js
-    |> Floki.find(Keyword.get(opts||[], :selector) || "article, p, div, body")
+    |> Floki.find(Keyword.get(opts, :selector) || "article, p, div, body")
     |> Enum.map(fn x ->
          extract_content(x, Keyword.get(opts, :keep_markup, false))
        end)
